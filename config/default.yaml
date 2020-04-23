@@ -1,0 +1,31 @@
+{
+  "test": "test!!!",
+  "now": "2020/04/22 11:00", # "YYYY/MM/DD hh:mm"
+  "execFlag": {
+      "VoLTE": true, # trueなら実行、falseなら実行しない
+      "Throughput": true, # trueなら実行、falseなら実行しない
+      "RACH": true, # trueなら実行、falseなら実行しない
+    },
+  "setting": {
+    "Threshold": {
+      "VoLTE": {
+        "ERAB_SUCCESS_RATIO_QCI_1": 80, # %未満
+        "ERAB_DROP_RATIO_QCI_1": 10, # %以上
+      },
+      "Throughput": {
+        "QCI_9_DL": 1000, # kbps未満
+        "QCI_9_UL": 300, # kbps未満
+      },
+      "RACH": {
+        "RACH_DENOMI3": 50, # %以下(値は1800で固定)
+      },
+      "deterioration_count": 5, # 回以下
+    },
+    "Dir":{
+      "VoLTE":"C:/work/SWRO/tool/data/VoLTE", # 読み込みファイルPATH
+      "Throughput":"C:/work/SWRO/tool/data/Throughput", # 読み込みファイルPATH
+      "RACH":"C:/work/SWRO/tool/data/RACH", # 読み込みファイルPATH
+      "output":"C:/work/SWRO/tool/result" # 出力ファイルPATH
+    }
+  },
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "id_1": "303847",
+    "id_2": "91",
+    "KPI名": "end user throughput for DL[kbps]: QCI-9_DL",
+    "today": "3480.00",
+    "yesterday": "46868.35",
+    "deterioration_count": 5
+  },
+  {
+    "id_1": "303337",
+    "id_2": "91",
+    "KPI名": "end user throughput for UL[kbps]: QCI-9_UL",
+    "today": "55.94",
+    "yesterday": "31.41",
+    "deterioration_count": 13
+  },
+  {
+    "id_1": "303509",
+    "id_2": "91",
+    "KPI名": "end user throughput for UL[kbps]: QCI-9_UL",
+    "today": "327.88",
+    "yesterday": "49.73",
+    "deterioration_count": 12
+  },
+  {
+    "id_1": "303847",
+    "id_2": "91",
+    "KPI名": "end user throughput for UL[kbps]: QCI-9_UL",
+    "today": "376.00",
+    "yesterday": "1322.21",
+    "deterioration_count": 5
+  },
+  {
+    "id_1": "320192",
+    "id_2": "91",
+    "KPI名": "end user throughput for UL[kbps]: QCI-9_UL",
+    "today": "296.15",
+    "yesterday": "1023.76",
+    "deterioration_count": 5
+  }
+]

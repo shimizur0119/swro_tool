@@ -1,0 +1,26 @@
+[
+  {
+    "id_1": "352",
+    "id_2": "1113",
+    "KPI名": "RACH: rach_denomi3",
+    "today": "1800",
+    "yesterday": "1800",
+    "deterioration_count": 7
+  },
+  {
+    "id_1": "352",
+    "id_2": "40186",
+    "KPI名": "RACH: rach_denomi3",
+    "today": "0",
+    "yesterday": "0",
+    "deterioration_count": 16
+  },
+  {
+    "id_1": "324",
+    "id_2": "44649",
+    "KPI名": "RACH: rach_denomi3",
+    "today": "0",
+    "yesterday": "0",
+    "deterioration_count": 16
+  }
+]

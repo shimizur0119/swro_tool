@@ -1,0 +1,26 @@
+[
+  {
+    "KPI名": "RACH: rach_denomi3",
+    "today": "1800",
+    "yesterday": "1800",
+    "deterioration_count": 7,
+    "RNC ID": "352",
+    "WBTS ID": "1113"
+  },
+  {
+    "KPI名": "RACH: rach_denomi3",
+    "today": "0",
+    "yesterday": "0",
+    "deterioration_count": 16,
+    "RNC ID": "352",
+    "WBTS ID": "40186"
+  },
+  {
+    "KPI名": "RACH: rach_denomi3",
+    "today": "0",
+    "yesterday": "0",
+    "deterioration_count": 16,
+    "RNC ID": "324",
+    "WBTS ID": "44649"
+  }
+]
