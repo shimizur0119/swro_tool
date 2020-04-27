@@ -20,38 +20,36 @@ const csvParseOption = {
   columns: true,
 };
 
-const get_and_add_ids = (fileNames, fileDatas, mode) => {
+const get_and_add_ids = (fileDatas, mode) => {
   let ids = [];
-  for (e of fileNames) {
-    for (ee of fileDatas[e]) {
-      if (mode == "RACH") {
-        if (ee["RNC ID"] && ee["WBTS ID"]) {
-          const ukey = `${ee["RNC ID"]}_${ee["WBTS ID"]}`;
-          ee["ukey"] = ukey;
-          ee["PERIOD_START_TIME"] = strToDate(ee["PERIOD_START_TIME"]);
-        } else {
-          ee["ukey"] = null;
-        }
-      } else if (mode == "Throughput") {
-        if (ee["MRBTS ID"] && ee["LNCEL ID"]) {
-          const ukey = `${ee["MRBTS ID"]}_${ee["LNCEL ID"]}`;
-          ee["ukey"] = ukey;
-          ee["PERIOD_START_TIME"] = strToDate(ee["PERIOD_START_TIME"]);
-        } else {
-          ee["ukey"] = null;
-        }
-      } else if (mode == "VoLTE") {
-        if (ee["MRBTS ID"] && ee["LNCEL ID"]) {
-          const ukey = `${ee["MRBTS ID"]}_${ee["LNCEL ID"]}`;
-          ee["ukey"] = ukey;
-          ee["PERIOD_START_TIME"] = strToDate(ee["PERIOD_START_TIME"]);
-        } else {
-          ee["ukey"] = null;
-        }
+  for (e of fileDatas) {
+    if (mode == "RACH") {
+      if (e["RNC ID"] && e["WBTS ID"] && e["WCEL ID"]) {
+        const ukey = `${e["RNC ID"]}_${e["WBTS ID"]}_${e["WCEL ID"]}`;
+        e["ukey"] = ukey;
+        e["PERIOD_START_TIME"] = strToDate(e["PERIOD_START_TIME"]);
+      } else {
+        e["ukey"] = null;
+      }
+    } else if (mode == "Throughput") {
+      if (e["MRBTS ID"] && e["LNCEL ID"]) {
+        const ukey = `${e["MRBTS ID"]}_${e["LNCEL ID"]}`;
+        e["ukey"] = ukey;
+        e["PERIOD_START_TIME"] = strToDate(e["PERIOD_START_TIME"]);
+      } else {
+        e["ukey"] = null;
+      }
+    } else if (mode == "VoLTE") {
+      if (e["MRBTS ID"] && e["LNCEL ID"]) {
+        const ukey = `${e["MRBTS ID"]}_${e["LNCEL ID"]}`;
+        e["ukey"] = ukey;
+        e["PERIOD_START_TIME"] = strToDate(e["PERIOD_START_TIME"]);
+      } else {
+        e["ukey"] = null;
       }
     }
-    let tmplist = fileDatas[e].map((ee) => {
-      if (ee["ukey"]) return `${ee["ukey"]}`;
+    let tmplist = fileDatas.map((e) => {
+      if (e["ukey"]) return `${e["ukey"]}`;
     });
     ids = ids.concat(tmplist);
   }
@@ -80,36 +78,79 @@ const strToDate = (str) => {
   return date;
 };
 
-const get_deteriorationCount = (needData, mode, col) => {
+const strToDate_forConf = (str) => {
+  const list = str.split(" ");
+  const dl = list[0].split("/");
+  const YYYY = dl[0];
+  const MM = dl[1];
+  const DD = dl[2];
+  const tl = list[1].split(":");
+  const hh = tl[0];
+  const mm = tl[1];
+  const ss = tl[2];
+  const date = new Date(YYYY, MM, DD, hh, mm, ss);
+  return date;
+};
+
+const yesterday_check = (todayData, yesterdayDatas, col) => {
+  const yesterdayData = yesterdayDatas.find((e) => {
+    const y_dt = e["PERIOD_START_TIME"];
+    const t_dt = todayData["PERIOD_START_TIME"];
+    const y_dt_str_H = y_dt.getHours();
+    const y_dt_str_M = y_dt.getMinutes();
+    const t_dt_str_H = y_dt.getHours();
+    const t_dt_str_M = y_dt.getMinutes();
+    const y_dt_str = `${y_dt_str_H}:${y_dt_str_M}`;
+    const t_dt_str = `${t_dt_str_H}:${t_dt_str_M}`;
+    return y_dt_str === t_dt_str;
+  });
+  let ng_flag;
+  if (yesterdayData[col]) {
+    const yd = Number(yesterdayData[col]);
+    const yd_under5per = (yd / 100) * 95;
+    const yd_over5per = (yd / 100) * 105;
+    const td = Number(todayData[col]);
+    if (td >= yd_under5per && td <= yd_over5per) {
+      ng_flag = false;
+    } else {
+      ng_flag = true;
+    }
+  }
+  return ng_flag;
+};
+
+const get_deteriorationCount = (todayDatas, yesterdayDatas, mode, col) => {
   const TH_conf_VoLTE = conf.setting.Threshold.VoLTE;
   const TH_conf_Throughput = conf.setting.Threshold.Throughput;
   const TH_conf_RACH = conf.setting.Threshold.RACH;
   let count = 0;
-  needData.forEach((e) => {
+  let ng_flag;
+  todayDatas.forEach((e) => {
+    ng_flag = yesterday_check(e, yesterdayDatas, col);
     if (e[col]) {
       if (mode == "RACH") {
         const value = Number(e[col]);
         if (value <= (TH_conf_RACH.RACH_DENOMI3 / 100) * 1800) {
-          count += 1;
+          if (ng_flag) count += 1;
         }
       } else if (mode == "Throughput") {
         if (col == col_Throughput_1) {
           if (Number(e[col]) < TH_conf_Throughput.QCI_9_DL) {
-            count += 1;
+            if (ng_flag) count += 1;
           }
         } else if (col == col_Throughput_2) {
           if (Number(e[col]) < TH_conf_Throughput.QCI_9_UL) {
-            count += 1;
+            if (ng_flag) count += 1;
           }
         }
       } else if (mode == "VoLTE") {
         if (col == col_VoLTE_1) {
           if (Number(e[col]) < TH_conf_VoLTE.ERAB_SUCCESS_RATIO_QCI_1) {
-            count += 1;
+            if (ng_flag) count += 1;
           }
         } else if (col == col_VoLTE_2) {
           if (Number(e[col]) >= TH_conf_VoLTE.ERAB_DROP_RATIO_QCI_1) {
-            count += 1;
+            if (ng_flag) count += 1;
           }
         }
       }
@@ -120,126 +161,80 @@ const get_deteriorationCount = (needData, mode, col) => {
 
 const get_fileNames = async (dir) => {
   let fileNames = await fs.readdir(dir);
-  const todayFileName = fileNames.find((e) => e.includes("AF"));
-  const yesterdayFileName = fileNames.find((e) => e.includes("BF"));
-  fileNames = [todayFileName, yesterdayFileName];
   return fileNames;
 };
 
-const get_fileData = async (dir, todayFileName, yesterdayFileName) => {
-  let fileDatas = {};
-  const data1 = await fs.readFile(`${dir}/${todayFileName}`);
-  const data2 = await fs.readFile(`${dir}/${yesterdayFileName}`);
-  fileDatas[todayFileName] = await csvParse(data1, csvParseOption);
-  fileDatas[yesterdayFileName] = await csvParse(data2, csvParseOption);
+const get_fileData = async (dir, fileNames) => {
+  let fileDatas = [];
+  for (name of fileNames) {
+    let data = await fs.readFile(`${dir}/${name}`);
+    data = await csvParse(data, csvParseOption);
+    fileDatas = fileDatas.concat(data);
+  }
   return fileDatas;
 };
 
-const get_result = async (ids, todayData, yesterdayData, columns, mode) => {
+const get_result = async (ids, fileDatas, columns, mode) => {
+  const today_dt = strToDate_forConf(conf.now + ":00");
+  const today_end_dt = new Date(
+    today_dt.getFullYear(),
+    today_dt.getMonth(),
+    today_dt.getDate() + 1,
+    0,
+    0,
+    -1
+  );
+  let yesterday_dt = strToDate_forConf(conf.now + ":00");
+  yesterday_dt.setDate(yesterday_dt.getDate() - 1);
+  const yesterday_end_dt = new Date(
+    yesterday_dt.getFullYear(),
+    yesterday_dt.getMonth(),
+    yesterday_dt.getDate() + 1,
+    0,
+    0,
+    -1
+  );
   let result = {};
   for (col of columns) {
     result[col] = {};
     for (id of ids) {
       result[col][id] = {};
-      let needTodayData = await todayData.filter((e) => e["ukey"] == id);
-      let needYesterdayData = await yesterdayData.filter(
-        (e) => e["ukey"] == id
+      let needTodayDatas = await fileDatas
+        .filter(
+          (e) =>
+            e["PERIOD_START_TIME"] >= today_dt &&
+            e["PERIOD_START_TIME"] <= today_end_dt
+        )
+        .filter((e) => e["ukey"] == id)
+        .filter((e, i, self) => self.indexOf(e) === i && e);
+      let needYesterdayDatas = await fileDatas
+        .filter(
+          (e) =>
+            e["PERIOD_START_TIME"] >= yesterday_dt &&
+            e["PERIOD_START_TIME"] <= yesterday_end_dt
+        )
+        .filter((e) => e["ukey"] == id)
+        .filter((e, i, self) => self.indexOf(e) === i && e);
+      needTodayDatas = get_sortValues(needTodayDatas);
+      needYesterdayDatas = get_sortValues(needYesterdayDatas);
+      const today_dc = get_deteriorationCount(
+        needTodayDatas,
+        needYesterdayDatas,
+        mode,
+        col
       );
-      needTodayData = get_sortValues(needTodayData);
-      needYesterdayData = get_sortValues(needYesterdayData);
-      const today_dc = get_deteriorationCount(needTodayData, mode, col);
-      result[col][id]["today"] = needTodayData[0][col];
-      result[col][id]["yesterday"] = needYesterdayData[0][col];
+      result[col][id]["today"] = needTodayDatas[0][col];
+      result[col][id]["yesterday"] = needYesterdayDatas[0][col];
       result[col][id]["dc"] = today_dc;
     }
   }
   return result;
 };
 
-const RACH_func = async () => {
-  const readDir = Dir_conf.RACH;
-  const fileNames = await get_fileNames(readDir);
-  const todayFileName = fileNames[0];
-  const yesterdayFileName = fileNames[1];
-  const fileDatas = await get_fileData(
-    readDir,
-    todayFileName,
-    yesterdayFileName
-  );
-  const ids = get_and_add_ids(fileNames, fileDatas, "RACH");
-  const todayData = fileDatas[todayFileName];
-  const yesterdayData = fileDatas[yesterdayFileName];
-  const columns = [col_RACH_1];
-  const result = await get_result(
-    ids,
-    todayData,
-    yesterdayData,
-    columns,
-    "RACH"
-  );
-  const ngDatas = resultFilter(result, dc_conf, "RACH");
-  const outputPath = `${Dir_conf.output}/RACH_output_${formatted}.json`;
-  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
-  console.log(JSON.stringify(ngDatas, null, 2));
-};
-
-const Throughput_func = async () => {
-  const readDir = Dir_conf.Throughput;
-  const fileNames = await get_fileNames(readDir);
-  const todayFileName = fileNames[0];
-  const yesterdayFileName = fileNames[1];
-  const fileDatas = await get_fileData(
-    readDir,
-    todayFileName,
-    yesterdayFileName
-  );
-  const ids = await get_and_add_ids(fileNames, fileDatas, "Throughput");
-  const todayData = fileDatas[todayFileName];
-  const yesterdayData = fileDatas[yesterdayFileName];
-  const columns = [col_Throughput_1, col_Throughput_2];
-  const result = await get_result(
-    ids,
-    todayData,
-    yesterdayData,
-    columns,
-    "Throughput"
-  );
-  const ngDatas = resultFilter(result, dc_conf, "Throughput");
-  const outputPath = `${Dir_conf.output}/Throughput_output_${formatted}.json`;
-  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
-  console.log(JSON.stringify(ngDatas, null, 2));
-};
-
-const VoLTE_func = async () => {
-  const readDir = Dir_conf.VoLTE;
-  const fileNames = await get_fileNames(readDir);
-  const todayFileName = fileNames[0];
-  const yesterdayFileName = fileNames[1];
-  const fileDatas = await get_fileData(
-    readDir,
-    todayFileName,
-    yesterdayFileName
-  );
-  const ids = get_and_add_ids(fileNames, fileDatas, "VoLTE");
-  const todayData = fileDatas[todayFileName];
-  const yesterdayData = fileDatas[yesterdayFileName];
-  const columns = [col_VoLTE_1, col_VoLTE_2];
-  const result = await get_result(
-    ids,
-    todayData,
-    yesterdayData,
-    columns,
-    "VoLTE"
-  );
-  const ngDatas = resultFilter(result, dc_conf, "VoLTE");
-  const outputPath = `${Dir_conf.output}/VoLTE_output_${formatted}.json`;
-  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
-  console.log(JSON.stringify(ngDatas, null, 2));
-};
-
 const resultFilter = (result, dc, mode) => {
   const id_1 = mode == "RACH" ? "RNC ID" : "MRBTS ID";
   const id_2 = mode == "RACH" ? "WBTS ID" : "LNCEL ID";
+  const id_3 = mode == "RACH" ? "WCEL ID" : null;
   let ngDatas = [];
   const colums = Object.keys(result);
   for (col of colums) {
@@ -255,11 +250,63 @@ const resultFilter = (result, dc, mode) => {
         };
         ngData[id_1] = idvals[0];
         ngData[id_2] = idvals[1];
+        if (id_3) ngData[id_3] = idvals[2];
         ngDatas.push(ngData);
       }
     }
   }
   return ngDatas;
+};
+
+const RACH_func = async () => {
+  const readDir = Dir_conf.RACH;
+  const fileNames = await get_fileNames(readDir);
+  // console.log(JSON.stringify(fileNames, null, 2));
+  const fileDatas = await get_fileData(readDir, fileNames);
+  // console.log(JSON.stringify(fileDatas, null, 2));
+  const ids = get_and_add_ids(fileDatas, "RACH");
+  // console.log(JSON.stringify(ids, null, 2));
+  const columns = [col_RACH_1];
+  const result = await get_result(ids, fileDatas, columns, "RACH");
+  // console.log(JSON.stringify(result, null, 2));
+  const ngDatas = resultFilter(result, dc_conf, "RACH");
+  const outputPath = `${Dir_conf.output}/RACH_output_${formatted}.json`;
+  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
+  console.log(JSON.stringify(ngDatas, null, 2));
+};
+
+const Throughput_func = async () => {
+  const readDir = Dir_conf.Throughput;
+  const fileNames = await get_fileNames(readDir);
+  // console.log(JSON.stringify(fileNames, null, 2));
+  const fileDatas = await get_fileData(readDir, fileNames);
+  // console.log(JSON.stringify(fileDatas, null, 2));
+  const ids = get_and_add_ids(fileDatas, "Throughput");
+  // console.log(JSON.stringify(ids, null, 2));
+  const columns = [col_Throughput_1, col_Throughput_2];
+  const result = await get_result(ids, fileDatas, columns, "Throughput");
+  // console.log(JSON.stringify(result, null, 2));
+  const ngDatas = resultFilter(result, dc_conf, "Throughput");
+  const outputPath = `${Dir_conf.output}/Throughput_output_${formatted}.json`;
+  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
+  console.log(JSON.stringify(ngDatas, null, 2));
+};
+
+const VoLTE_func = async () => {
+  const readDir = Dir_conf.VoLTE;
+  const fileNames = await get_fileNames(readDir);
+  // console.log(JSON.stringify(fileNames, null, 2));
+  const fileDatas = await get_fileData(readDir, fileNames);
+  // console.log(JSON.stringify(fileDatas, null, 2));
+  const ids = get_and_add_ids(fileDatas, "VoLTE");
+  // console.log(JSON.stringify(ids, null, 2));
+  const columns = [col_VoLTE_1, col_VoLTE_2];
+  const result = await get_result(ids, fileDatas, columns, "VoLTE");
+  // console.log(JSON.stringify(result, null, 2));
+  const ngDatas = resultFilter(result, dc_conf, "VoLTE");
+  const outputPath = `${Dir_conf.output}/VoLTE_output_${formatted}.json`;
+  await fs.writeFile(outputPath, JSON.stringify(ngDatas, null, 2));
+  console.log(JSON.stringify(ngDatas, null, 2));
 };
 
 const main = async () => {

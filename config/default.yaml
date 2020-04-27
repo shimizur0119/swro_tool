@@ -1,6 +1,6 @@
 {
   "test": "test!!!",
-  "now": "2020/04/22 11:00", # "YYYY/MM/DD hh:mm"
+  "now": "2020/04/15 7:00", # "YYYY/MM/DD hh:mm" ここで入力した時間以降のデータを計算する
   "execFlag": {
       "VoLTE": true, # trueなら実行、falseなら実行しない
       "Throughput": true, # trueなら実行、falseなら実行しない
