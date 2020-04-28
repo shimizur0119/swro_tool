@@ -1,6 +1,6 @@
 {
   "test": "test!!!",
-  "now": "2020/04/15 7:00", # "YYYY/MM/DD hh:mm" ここで入力した時間以降のデータを計算する
+  "now": "2020/04/23 7:00", # "YYYY/MM/DD hh:mm" ここで入力した時間以降のデータを計算する
   "execFlag": {
       "VoLTE": true, # trueなら実行、falseなら実行しない
       "Throughput": true, # trueなら実行、falseなら実行しない
@@ -22,9 +22,9 @@
       "deterioration_count": 5, # 回以下
     },
     "Dir":{
-      "VoLTE":"C:/work/SWRO/tool/data/VoLTE", # 読み込みファイルPATH
-      "Throughput":"C:/work/SWRO/tool/data/Throughput", # 読み込みファイルPATH
-      "RACH":"C:/work/SWRO/tool/data/RACH", # 読み込みファイルPATH
+      "VoLTE":"C:/work/SWRO/tool/_data2/VoLTE", # 読み込みファイルPATH
+      "Throughput":"C:/work/SWRO/tool/_data2/Throughput", # 読み込みファイルPATH
+      "RACH":"C:/work/SWRO/tool/_data2/RACH", # 読み込みファイルPATH
       "output":"C:/work/SWRO/tool/result" # 出力ファイルPATH
     }
   },
